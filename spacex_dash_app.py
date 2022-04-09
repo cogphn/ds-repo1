@@ -50,7 +50,7 @@ app.layout = html.Div(children=[html.H1('SpaceX Launch Records Dashboard',
                                         5000:'5000',
                                         7500:'7500',
                                         10000: '10000'},
-                                    value=[min_payload, max_payload]),
+                                    value=[2500, 8000]), # defaults shown in screenshot
 
                                 # TASK 4: Add a scatter chart to show the correlation between payload and launch success
                                 html.Div(dcc.Graph(id='success-payload-scatter-chart')),
@@ -62,15 +62,21 @@ app.layout = html.Div(children=[html.H1('SpaceX Launch Records Dashboard',
               Input(component_id='site-dropdown', component_property='value'))
 def get_pie_chart(entered_site):
     if entered_site == 'ALL':
-        filtered_df = spacex_df
+        filtered_df = spacex_df[spacex_df['class']==1] # only successful launches
         fig = px.pie(filtered_df, values='class', 
         names='Launch Site', 
         title='Total Success Launches By Site')
         return fig
     else:
-        filtered_df = spacex_df[spacex_df['Launch Site']==entered_site]
-        fig = px.pie(filtered_df, values='class', 
-        names='Mission Outcome', 
+        filtered_df = spacex_df[spacex_df['Launch Site']==entered_site].copy(deep=True)
+        filtered_df.loc[filtered_df['class']==0, 'Mission Outcome'] = 'Fail'
+        filtered_df.loc[filtered_df['class']==1, 'Mission Outcome'] = 'Success'
+        #filtered_df.loc[filtered_df['class']==0, 'pieval_count'] = 1
+        #filtered_df.loc[filtered_df['class']==1, 'pieval_count'] = 1
+        filtered_df['pieval_count'] = 1
+
+        fig = px.pie(filtered_df, values='pieval_count', 
+        names='class',
         title=f'Total Success launches for site {entered_site}')
         return fig
         # return the outcomes piechart for a selected site
@@ -95,6 +101,8 @@ def get_scatter(entered_site, payload_range):
     
 
     #
+#
+
 
 # Run the app
 if __name__ == '__main__':
